@@ -244,6 +244,7 @@ class _TaskPageState extends State<TaskPage> {
                         date = dateController.text;
                         addTask(isUpdate: widget.isUpdate);
                         clearText();
+                        Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text(widget.isUpdate
                                 ? "Thing Updated"

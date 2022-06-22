@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_crud/main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginWidget extends StatefulWidget {
   final VoidCallback onClickedSignUp;
@@ -110,6 +111,23 @@ class _LoginWidgetPageState extends State<LoginWidget> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                Text("OR", style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyText1!.color)),
+                const SizedBox(height: 20),
+                InkWell(
+                  onTap: googleSignIn,
+                  child: Container(
+                    height: 40.0,
+                    width: 40.0,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage('assets/images/google.png'),
+                          fit: BoxFit.cover),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 RichText(
                     text: TextSpan(
                         text: "No Account ?  ",
@@ -130,5 +148,37 @@ class _LoginWidgetPageState extends State<LoginWidget> {
         ),
       ),
     );
+  }
+
+  googleSignIn() async {
+    User? user;
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
+    final GoogleSignInAccount? googleSignInAccount =
+    await googleSignIn.signIn();
+    if (googleSignInAccount != null) {
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+
+      try {
+        final UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        user = userCredential.user;
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          // handle the error here
+        } else if (e.code == 'invalid-credential') {
+          // handle the error here
+        }
+      } catch (e) {
+        // handle the error here
+      }
+    }
   }
 }

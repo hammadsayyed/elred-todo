@@ -4,39 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_crud/main.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 
 import 'add_task.dart';
-
-class HomeWidget extends StatelessWidget {
-  final user = FirebaseAuth.instance.currentUser!;
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(user.email!),
-              const SizedBox(height: 15),
-              ElevatedButton.icon(
-                  onPressed: () => FirebaseAuth.instance.signOut(),
-                  style: ElevatedButton.styleFrom(
-                      minimumSize: Size.fromHeight(50)),
-                  icon: const Icon(Icons.lock_open, size: 25),
-                  label: const Text(
-                    "Sign Out",
-                    style: TextStyle(fontSize: 20),
-                  ))
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class HomeListPage extends StatefulWidget {
   const HomeListPage({Key? key}) : super(key: key);
@@ -66,8 +37,9 @@ class _HomeListPage extends State<HomeListPage> {
 
   @override
   Widget build(BuildContext context) {
-     final Stream<QuerySnapshot> listThings =
-      FirebaseFirestore.instance.collection("userData").doc(user.uid).collection('tasks').snapshots();
+    final Stream<QuerySnapshot> listThings =
+    FirebaseFirestore.instance.collection("userData").doc(user.uid).collection('tasks').snapshots();
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
     return StreamBuilder<QuerySnapshot>(
       stream: listThings,
@@ -89,6 +61,7 @@ class _HomeListPage extends State<HomeListPage> {
         }).toList();
         print(dataList);
         return Scaffold(
+            key: scaffoldKey,
             backgroundColor: Colors.white,
             drawer: Drawer(
               child: Row(
@@ -100,7 +73,7 @@ class _HomeListPage extends State<HomeListPage> {
                     child: Text(user.email.toString(),style: const TextStyle(fontSize: 20),),
                   ),
                   IconButton(onPressed: (){
-                      FirebaseAuth.instance.signOut();
+                    FirebaseAuth.instance.signOut();
                   }, icon: const Icon(Icons.logout)),
                 ],
               ),
@@ -111,11 +84,11 @@ class _HomeListPage extends State<HomeListPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const TaskPage(),
+                    builder: (context) => TaskPage(),
                   ),
                 );
               },
-              backgroundColor: Colors.lightBlue,
+              backgroundColor: Color.fromARGB(255, 91, 172, 238),
             ),
             body: CustomScrollView(
               shrinkWrap: true,
@@ -128,50 +101,73 @@ class _HomeListPage extends State<HomeListPage> {
                   snap: true,
                   collapsedHeight: 250,
                   pinned: true,
+                  leading: IconButton(
+                    icon: Icon(Icons.menu,color: Colors.white),
+                    onPressed: () => scaffoldKey.currentState!.openDrawer(),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5.0),
                   ),
                   expandedHeight: 250,
                   flexibleSpace: FlexibleSpaceBar(
-                    title: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    title: Stack(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 50),
-                          child: Row(
-                            children: const [
-                              Text(
-                                "Your\n  Things",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 38,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w200),
-                              ),
+                        Positioned(child: Container(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(dataList.length.toString(), style: TextStyle(fontSize: 25,fontWeight: FontWeight.w500),),
+                              Text("Total Tasks", style: TextStyle(fontSize: 15,fontWeight: FontWeight.w300, color: Colors.white.withOpacity(0.8)),),
                             ],
                           ),
+                          color: Colors.transparent.withOpacity(0.2), ),
+                          height: 250,
+                          width: MediaQuery.of(context).size.width / 2.5,
+                          top: 0,
+                          right: 0,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Text(
-                            DateFormat('MMM dd, yyyy').format(DateTime.now()),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.white),
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 70),
+                              child: Row(
+                                children: const [
+                                  Text(
+                                    "Your\n  Tasks",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 38,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w200),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20),
+                              child: Text(
+                                DateFormat('MMM dd, yyyy').format(DateTime.now()),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.white),
+                              ),
+                            ),
+                          ],
                         ),
+
                       ],
                     ),
                     centerTitle: true,
                     background: Container(
                       decoration: const BoxDecoration(
                           border: Border(
-                        bottom: BorderSide(
-                          color: Colors.blueAccent,
-                          width: 4.0,
-                        ),
-                      )),
+                            bottom: BorderSide(
+                              color: Colors.blueAccent,
+                              width: 4.0,
+                            ),
+                          )),
                       child: Image.asset(
                         'assets/images/hill.jpg',
                         color: const Color(0xff0d69ff).withOpacity(1),
@@ -183,7 +179,7 @@ class _HomeListPage extends State<HomeListPage> {
                 ),
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index) {
+                        (BuildContext context, int index) {
                       return Container(
                         color: Colors.white,
                         padding: const EdgeInsets.all(20),
@@ -205,77 +201,77 @@ class _HomeListPage extends State<HomeListPage> {
                               child: dataList.isNotEmpty ? Column(
                                 children: [
                                   ...dataList.map((e) => Dismissible(
-                                        key: Key(e['id']),
-                                        onDismissed: (direction) async {
-                                          await deleteTask(e['id']);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content: Text(
-                                                      '${e['name']} deleted')));
-                                        },
-                                        child: Container(
-                                            padding: const EdgeInsets.all(5),
-                                            decoration: const BoxDecoration(
-                                                border: Border(
+                                    key: Key(e['id']),
+                                    onDismissed: (direction) async {
+                                      await deleteTask(e['id']);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                          content: Text(
+                                              '${e['name']} dismissed')));
+                                    },
+                                    child: Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: const BoxDecoration(
+                                            border: Border(
                                               bottom: BorderSide(
                                                   width: 0.3,
                                                   color: Colors.black45),
                                             )),
-                                            child: ListTile(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        TaskPage(isUpdate: true,dataUpdate: e),
-                                                  ),
-                                                );
-                                              },
-                                              contentPadding: const EdgeInsets.all(0),
-                                              leading: Container(
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      const Color(0xff7c94b6),
-                                                  borderRadius:
-                                                      const BorderRadius.all(
-                                                          Radius.circular(
-                                                              40.0)),
-                                                  border: Border.all(
+                                        child: ListTile(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    TaskPage(isUpdate: true,dataUpdate: e),
+                                              ),
+                                            );
+                                          },
+                                          contentPadding: EdgeInsets.all(0),
+                                          leading: Container(
+                                            decoration: BoxDecoration(
+                                              color:
+                                              const Color(0xff7c94b6),
+                                              borderRadius:
+                                              const BorderRadius.all(
+                                                  Radius.circular(
+                                                      40.0)),
+                                              border: Border.all(
+                                                color: Colors.black26,
+                                                width: 0.0,
+                                              ),
+                                            ),
+                                            child: CircleAvatar(
+                                              radius: 25,
+                                              child: Icon(
+                                                  Icons.business,
+                                                  color: Colors.blue,
+                                                  size: 25),
+                                              backgroundColor: Colors.white,
+                                            ),
+                                          ),
+                                          title: Text(e["name"].toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.black87,
+                                                  fontSize: 16,
+                                                  fontWeight:
+                                                  FontWeight.bold)),
+                                          subtitle: Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 6.0),
+                                            child: Text(
+                                                e["description"].toString(),
+                                                style: const TextStyle(
+                                                    fontSize: 12,
                                                     color: Colors.black26,
-                                                    width: 0.0,
-                                                  ),
-                                                ),
-                                                child: const CircleAvatar(
-                                                  radius: 25,
-                                                  child: Icon(
-                                                      Icons.business,
-                                                      color: Colors.blue,
-                                                      size: 25),
-                                                  backgroundColor: Colors.white,
-                                                ),
-                                              ),
-                                              title: Text(e["name"].toString(),
-                                                  style: const TextStyle(
-                                                      color: Colors.black87,
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold)),
-                                              subtitle: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 6.0),
-                                                child: Text(
-                                                    e["description"].toString(),
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.black26,
-                                                        fontWeight:
-                                                            FontWeight.w500)),
-                                              ),
-                                            )),
-                                      )),
+                                                    fontWeight:
+                                                    FontWeight.w500)),
+                                          ),
+                                        )),
+                                  )),
                                 ],
                               ) : const Center(
-                                child: Text("No Records Found.",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),)
+                                  child: Text("No Records Found.",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),)
                               ),
                             )
                           ],
